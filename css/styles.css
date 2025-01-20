@@ -1,0 +1,426 @@
+[V0_FILE]typescriptreact:file="index.html" isEdit="true" isQuickEdit="true" isMerged="true"
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Catalog</title>
+    <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-5">Book Catalog</h1>
+        <button class="btn btn-primary mb-4" data-bs-toggle="modal" data-bs-target="#bookModal"
+            onclick="resetForm()">Add New Book</button>
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>ISBN</th>
+                        <th>Author</th>
+                        <th>Publisher</th>
+                        <th>Year</th>
+                        <th>Category</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="bookList"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="bookModal" tabindex="-1" aria-labelledby="bookModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form id="bookForm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="bookModalLabel">Add/Edit Book</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="bookId" name="id">
+                        <input type="hidden" name="action" id="action" value="create">
+                        <div class="mb-4">
+                            <label for="title" class="form-label">Title</label>
+                            <input type="text" id="title" name="title" class="form-control" required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="isbn" class="form-label">ISBN</label>
+                            <input type="text" id="isbn" name="isbn" class="form-control" required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="author" class="form-label">Author</label>
+                            <input type="text" id="author" name="author" class="form-control" required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="publisher" class="form-label">Publisher</label>
+                            <input type="text" id="publisher" name="publisher" class="form-control" required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="year_published" class="form-label">Year Published</label>
+                            <input type="number" id="year_published" name="year_published" class="form-control" required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="category" class="form-label">Category</label>
+                            <input type="text" id="category" name="category" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="assets/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script>
+document.addEventListener("DOMContentLoaded", () => {
+  fetchBooks();
+  document.getElementById("bookForm").addEventListener("submit", handleSubmit);
+});
+
+const fetchBooks = () => {
+  fetch("books.php", {
+    method: "POST",
+    body: new URLSearchParams({ action: "read" }),
+  })
+    .then((res) => res.json())
+    .then((books) => {
+      const bookList = document.getElementById("bookList");
+      bookList.innerHTML = books
+        .map(
+          (book) => `
+          <tr>
+              <td>${book.title}</td>
+              <td>${book.isbn}</td>
+              <td>${book.author}</td>
+              <td>${book.publisher}</td>
+              <td>${book.year_published}</td>
+              <td>${book.category}</td>
+              <td>
+                  <button class="btn btn-warning btn-sm" onclick="editBook(${book.id}, '${book.title}', '${book.isbn}', '${book.author}', '${book.publisher}', ${book.year_published}, '${book.category}')">Edit</button>
+                  <button class="btn btn-danger btn-sm" onclick="deleteBook(${book.id})">Delete</button>
+              </td>
+          </tr>
+      `
+        )
+        .join("");
+    });
+};
+
+const handleSubmit = (event) => {
+  event.preventDefault();
+  const formData = new FormData(event.target);
+  fetch("books.php", { method: "POST", body: formData }).then(() => {
+    document.getElementById("bookForm").reset();
+    bootstrap.Modal.getInstance(document.getElementById("bookModal")).hide();
+    fetchBooks();
+  });
+};
+
+const editBook = (
+  id,
+  title,
+  isbn,
+  author,
+  publisher,
+  year_published,
+  category
+) => {
+  document.getElementById("action").value = "update";
+  document.getElementById("bookId").value = id;
+  document.getElementById("title").value = title;
+  document.getElementById("isbn").value = isbn;
+  document.getElementById("author").value = author;
+  document.getElementById("publisher").value = publisher;
+  document.getElementById("year_published").value = year_published;
+  document.getElementById("category").value = category;
+  const modal = new bootstrap.Modal(document.getElementById("bookModal"));
+  modal.show();
+};
+
+const deleteBook = (id) => {
+  if (confirm("Are you sure you want to delete this book?")) {
+    fetch("books.php", {
+      method: "POST",
+      body: new URLSearchParams({ action: "delete", id }),
+    }).then(() => fetchBooks());
+  }
+};
+
+const resetForm = () => {
+  document.getElementById("bookForm").reset();
+  document.getElementById("action").value = "create";
+};
+</script>
+</body>
+
+</html>
+
+[V0_FILE]typescriptreact:file="css/styles.css" isEdit="true" isQuickEdit="true" isMerged="true"
+body {
+  font-family: "Poppins", sans-serif;
+  background-color: #f0f4f8;
+  color: #333;
+}
+
+.container {
+  background-color: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+  padding: 40px;
+  transition: all 0.5s ease;
+  transform: translateY(0);
+  opacity: 0;
+  animation: fadeInUp 0.8s ease-out forwards;
+}
+
+.container::before {
+  content: '';
+  position: absolute;
+  top: -15px;
+  left: -15px;
+  right: -15px;
+  bottom: -15px;
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  border-radius: 25px;
+  z-index: -1;
+  opacity: 0.1;
+  filter: blur(20px);
+}
+
+.container:hover {
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.15);
+  transform: translateY(-10px);
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+h1 {
+  color: #2c3e50;
+  font-weight: 700;
+  margin-bottom: 40px;
+  position: relative;
+  text-align: center;
+  font-size: 2.5rem;
+}
+
+h1::after {
+  content: '';
+  position: absolute;
+  bottom: -15px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 4px;
+  background: linear-gradient(to right, #3498db, #2980b9);
+  border-radius: 2px;
+}
+
+.btn-primary {
+  background-color: #3498db;
+  border: none;
+  border-radius: 30px;
+  padding: 10px 25px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+  background-color: #2980b9;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+}
+
+.table {
+  border-collapse: separate;
+  border-spacing: 0 15px;
+}
+
+.table thead th {
+  border: none;
+  background-color: #34495e;
+  color: #ffffff;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 15px;
+}
+
+.table tbody tr {
+  background-color: #ffffff;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.table tbody tr:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+}
+
+.table tbody td {
+  border: none;
+  padding: 20px 15px;
+  vertical-align: middle;
+}
+
+.modal-content {
+  border: none;
+  border-radius: 20px;
+  box-shadow: 0 10px 50px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.modal-header {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: #ffffff;
+  border-bottom: none;
+  padding: 20px 30px;
+}
+
+.modal-title {
+  font-weight: 600;
+  font-size: 1.5rem;
+  letter-spacing: 0.5px;
+}
+
+.modal-body {
+  padding: 30px;
+  background-color: #f8f9fa;
+}
+
+.form-label {
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 8px;
+}
+
+.form-control {
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 12px 15px;
+  transition: all 0.3s ease;
+  background-color: #ffffff;
+}
+
+.form-control:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+  transform: translateY(-2px);
+}
+
+.modal-footer {
+  border-top: none;
+  padding: 20px 30px;
+  background-color: #f8f9fa;
+}
+
+.btn {
+  border-radius: 30px;
+  padding: 12px 25px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary {
+  background-color: #95a5a6;
+  border: none;
+  color: #ffffff;
+}
+
+.btn-secondary:hover {
+  background-color: #7f8c8d;
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(127, 140, 141, 0.3);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  border: none;
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #2980b9, #3498db);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+}
+
+.modal.fade .modal-dialog {
+  transition: transform 0.3s ease-out;
+  transform: scale(0.9);
+}
+
+.modal.show .modal-dialog {
+  transform: scale(1);
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-content {
+  animation: modalFadeIn 0.5s ease-out;
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 20px;
+  }
+
+  .table thead {
+    display: none;
+  }
+
+  .table tbody tr {
+    display: block;
+    margin-bottom: 20px;
+  }
+
+  .table tbody td {
+    display: block;
+    text-align: right;
+    padding: 10px;
+  }
+
+  .table tbody td::before {
+    content: attr(data-label);
+    float: left;
+    font-weight: bold;
+    text-transform: uppercase;
+  }
+}
+
+.content-wrapper {
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+}
